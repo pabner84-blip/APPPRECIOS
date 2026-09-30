@@ -32,8 +32,29 @@ en cada dispositivo por separado.
 | `app.js` | La lógica: búsqueda, filtros, importación, ficha |
 | `sw.js` | Permite instalar la app y usarla sin internet |
 | `manifest.json` | Datos de la app instalable |
-| `icon-192.png` / `icon-512.png` | Iconos |
+| `icono-192.png` / `icono-512.png` | Iconos |
 | `.nojekyll` | Evita que GitHub Pages ejecute Jekyll sobre la carpeta |
+
+---
+
+## Qué se ve en pantalla
+
+Solo lo necesario para buscar:
+
+- El buscador.
+- El botón para cambiar entre tema oscuro y claro.
+- Los filtros **Marca**, **Disponibilidad** y **Ordenar**.
+- Una **rejilla de tarjetas** con la foto, el código, la descripción, la
+  marca, el precio de venta y el estado del stock.
+
+Toca una tarjeta y se abre la ficha del producto con el código, el código de
+barras, la descripción, la marca, la categoría, el precio de venta, el stock,
+el stock mínimo y las características.
+
+No se muestran los números de productos, categorías ni marcas, ni la barra de
+categorías. Esa información se sigue guardando internamente (sirve para la
+ficha del producto y para el archivo que exporta la app), simplemente no ocupa
+lugar en pantalla.
 
 ---
 
@@ -57,8 +78,9 @@ se pisa ningún dato que ya esté cargado.
 
 ## Publicar en GitHub Pages
 
-1. Crea un repositorio nuevo (puede ser privado en Android: la app queda
-   instalada en el teléfono y sigue funcionando sin internet).
+1. Crea un repositorio nuevo. GitHub Pages gratis necesita que sea **público**,
+   pero solo se sube el código: ningún precio, stock ni foto va en el
+   repositorio, así que no se publica información del negocio.
 2. Sube **el contenido de la carpeta `publicar/`** en la rama principal.
 3. En **Settings → Pages**, elige *Deploy from a branch*, rama
    `main`, carpeta `/ (root)`.

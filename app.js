@@ -136,7 +136,6 @@ const state = {
   vista: [],                  // productos ya filtrados y ordenados
   modalId: null,              // producto abierto en la ficha
   galIdx: 0,
-  catSel: '',                 // categoría elegida en las etiquetas
   observando: null,           // IntersectionObserver de imágenes
   pendingImgs: new Set()      // ids ya pedidos, para no repetirlos
 };
@@ -157,13 +156,11 @@ function coincide(p, texto) {
 
 function aplicarFiltros() {
   const texto = $('#search').value;
-  const cat = state.catSel || '';
   const marca = $('#selMarca').value;
   const disp = $('#selStock').value;
   const orden = $('#selOrden').value;
 
   let lista = state.productos.filter((p) => {
-    if (cat && norm(p.categoria) !== cat) return false;
     if (marca && norm(p.marca) !== marca) return false;
     if (disp === 'con' && !(p.stock > 0)) return false;
     if (disp === 'sin' && p.stock > 0) return false;
@@ -213,15 +210,14 @@ function pintarTarjetas() {
     $('#emptyTitle').textContent = 'Aún no hay productos en el catálogo';
   } else {
     $('#emptyTitle').textContent = 'No hay productos que coincidan';
-    $('#emptyMsg').textContent = 'Prueba con otra palabra, quita los filtros o cambia la categoría seleccionada.';
+    $('#emptyMsg').textContent = 'Prueba con otra palabra o quita los filtros.';
     $('#btnImport2').hidden = true;
   }
 
   if (vacio) { grid.innerHTML = ''; return; }
 
-  grid.innerHTML = lista.map((p, i) => {
+  grid.innerHTML = lista.map((p) => {
     const n = state.fotosN.get(p.id) || 0;
-    const cod = escapeHtml(p.codigo || 'S/C');
     return `
       <button class="card" data-id="${escapeHtml(p.id)}" type="button">
         <div class="card-img">
@@ -230,7 +226,7 @@ function pintarTarjetas() {
           ${n > 1 ? `<span class="nphotos">📷 ${n}</span>` : ''}
         </div>
         <div class="card-body">
-          <span class="card-code">${cod}</span>
+          <span class="card-code">${escapeHtml(p.codigo || 'S/C')}</span>
           <span class="card-name">${escapeHtml(p.nombre || 'Sin descripción')}</span>
           <span class="card-brand">${escapeHtml(p.marca || 'Sin marca')}</span>
           <div class="card-foot">
@@ -287,30 +283,12 @@ async function todasLasFotos(id) {
   return rec.imgs.length ? rec.imgs : rec.urls;
 }
 
+/* Solo deja la barra de filtros lista o escondida. El bloque de números
+   (productos, categorías, marcas…) se quitó a petición del usuario. */
 function pintarResumen() {
-  const conFoto = state.productos.filter(p => state.fotosN.get(p.id)).length;
-  const conStock = state.productos.filter(p => p.stock > 0).length;
-  $('#stTotal').textContent = state.productos.length;
-  $('#stCategorias').textContent = state.categorias.length;
-  $('#stMarcas').textContent = state.marcas.length;
-  $('#stFotos').textContent = conFoto;
-  $('#stStock').textContent = conStock;
-  $('#stats').hidden = state.productos.length === 0;
-  $('#filters').hidden = state.productos.length === 0;
-  $('#btnExport').disabled = state.productos.length === 0;
-}
-
-function pintarCategorias() {
-  const cont = state.categorias.filter(c => c.n > 0);
-  const sel = state.catSel;
-  const chip = (cat, texto, n) =>
-    `<button class="chip${cat === sel ? ' active' : ''}" data-cat="${escapeHtml(cat)}">${escapeHtml(texto)} <b>${n}</b></button>`;
-  const html = [chip('', '📦 Todas', state.productos.length)]
-    .concat(cont.map(c => chip(c.nombre, c.nombre, c.n)))
-    .join('');
-  const box = $('#catChips');
-  box.innerHTML = html;
-  box.hidden = cont.length === 0;
+  const vacio = state.productos.length === 0;
+  $('#filters').hidden = vacio;
+  $('#btnExport').disabled = vacio;
 }
 
 function pintarMarcas() {
@@ -324,11 +302,8 @@ function pintarMarcas() {
 function render() {
   aplicarFiltros();
   pintarResumen();
-  pintarCategorias();
   pintarMarcas();
   pintarTarjetas();
-  const n = state.vista.length;
-  $('#count').textContent = n === 1 ? '1 producto' : n + ' productos';
 }
 
 /* -------------------------------------------------------------------------
@@ -372,9 +347,16 @@ async function abrirFicha(id) {
   filas.push(fila('Stock mín.', String(p.stockMin || 0)));
   $('#mdGrid').innerHTML = filas.join('');
 
-  const carac = String(p.caracteristicas || '').trim();
-  $('#mdCaracBlock').hidden = !carac;
-  $('#mdCarac').textContent = carac;
+  // Las características llegan como texto con saltos de línea. Se separan en
+  // párrafos para que se lean igual que en la app original.
+  const lineasCarac = String(p.caracteristicas || '')
+    .split(/\r?\n/)
+    .map(s => s.trim())
+    .filter(Boolean);
+  $('#mdCaracBlock').hidden = lineasCarac.length === 0;
+  $('#mdCarac').innerHTML = lineasCarac
+    .map(l => `<p>${escapeHtml(l)}</p>`)
+    .join('');
 
   // Fotos
   const gal = document.querySelector('.gal');
@@ -809,7 +791,6 @@ async function vaciarCatalogo() {
     await Store.clearFotos();
     await Store.setMeta('ultimoBackup', null);
     await Store.setMeta('historial', []);
-    state.catSel = '';
     state.fotosN.clear();
     cacheFoto.clear();
     await cargarTodo();
@@ -948,14 +929,6 @@ function conectarEventos() {
   });
 
   // --- Filtros ---
-  $('#catChips').addEventListener('click', (e) => {
-    const c = e.target.closest('.chip');
-    if (!c) return;
-    $$('#catChips .chip').forEach(x => x.classList.remove('active'));
-    c.classList.add('active');
-    state.catSel = c.dataset.cat || '';
-    render();
-  });
   ['#selMarca', '#selStock', '#selOrden'].forEach(sel =>
     $(sel).addEventListener('change', render));
 
@@ -1061,9 +1034,6 @@ async function iniciar() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     navigator.serviceWorker.register('sw.js').catch(() => { /* sin offline */ });
   }
-
-  // Atajo: el filtro de categoría vive en el contenedor de las etiquetas.
-  state.catSel = '';
 }
 
 if (document.readyState === 'loading') {

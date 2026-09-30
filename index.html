@@ -67,39 +67,8 @@
 <!-- ==================== CONTENIDO ==================== -->
 <main class="wrap">
 
-  <!-- ---------- RESÚMENES ---------- -->
-  <section class="stats" id="stats" hidden>
-    <div class="stat">
-      <span class="stat-ico">📦</span>
-      <span class="stat-val" id="stTotal">0</span>
-      <span class="stat-lbl">Productos</span>
-    </div>
-    <div class="stat">
-      <span class="stat-ico">🗂️</span>
-      <span class="stat-val" id="stCategorias">0</span>
-      <span class="stat-lbl">Categorías</span>
-    </div>
-    <div class="stat">
-      <span class="stat-ico">🏷️</span>
-      <span class="stat-val" id="stMarcas">0</span>
-      <span class="stat-lbl">Marcas</span>
-    </div>
-    <div class="stat">
-      <span class="stat-ico">📷</span>
-      <span class="stat-val" id="stFotos">0</span>
-      <span class="stat-lbl">Con foto</span>
-    </div>
-    <div class="stat stat-ok">
-      <span class="stat-ico">✅</span>
-      <span class="stat-val" id="stStock">0</span>
-      <span class="stat-lbl">En stock</span>
-    </div>
-  </section>
-
   <!-- ---------- FILTROS ---------- -->
   <section class="filters" id="filters" hidden>
-    <div class="chips" id="catChips"></div>
-
     <div class="filters-row">
       <label class="field">
         <span>Marca</span>
@@ -127,7 +96,6 @@
           <option value="categoria">Categoría</option>
         </select>
       </label>
-      <span class="result-count" id="count">0 productos</span>
     </div>
   </section>
 
@@ -190,9 +158,10 @@
 
       <div class="detail-grid" id="mdGrid"></div>
 
+      <!-- Características: los párrafos de la app original se muestran tal cual -->
       <div class="md-block" id="mdCaracBlock" hidden>
         <span class="detail-label">Características</span>
-        <p class="md-carac" id="mdCarac"></p>
+        <div class="md-carac" id="mdCarac"></div>
       </div>
 
       <div class="md-foot">
